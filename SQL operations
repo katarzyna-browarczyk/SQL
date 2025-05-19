@@ -147,7 +147,7 @@ and t.cena_uzyskana - d.cena_proponowana >0
 --31. Wyświetlić wartość w miesiącach, jaka upłynęła pomiędzy transakcją a dzisiejszym dniem.
 select month(t.data_transakcji) - month(getdate()) as 'miesiace'
 from lab9.transakcje t
---lub select *, DATEDIFF(MONTH,data\_trasakcji,getdate()) as 'liczba miesiecy' from lab9.transakcje
+--lub select *, DATEDIFF(MONTH,data_trasakcji,getdate()) as 'liczba miesiecy' from lab9.transakcje
 --32. Wyświetlić wartość liczbową prezentującą liczbę przeprowadzonych transakcji.
 select COUNT (*) as 'liczba transakcji' from lab9.transakcje
 --33. Wyświetlić cenę proponowaną w wartościach tekstowych.
@@ -160,20 +160,9 @@ select MIN(cena_uzyskana) from lab9.transakcje
 select MAX(cena_uzyskana) from lab9.transakcje
 --37. Wyświetlić wszystkie nazwiska i ewentualnie daty transakcji oraz metraże sprzedanych domów, w przypadku, gdy transakcja sprzedaży miała miejsce.
 select k.nazwisko, t.data_transakcji, d.metraz
-from lab9.klient k, lab9.transakcje t, lab9.dom d
-where k.id_klienta = t.id_klienta
-and d.id_domu=t.id_domu
---dwie wersje ale join lepszy bo pokazuje tez nazwiska klientow ktorzy nie dokonali transakcji
-select k.nazwisko, t.data_transakcji, d.metraz
 from lab9.klient k left join lab9.transakcje t
 on k.id_klienta = t.id_klienta
 left join lab9.dom d
-on d.id_domu=t.id_domu
---inner join daje taki sam wynik co where (tylko wspolne dane)
-select k.nazwisko, t.data_transakcji, d.metraz
-from lab9.klient k inner join lab9.transakcje t
-on k.id_klienta = t.id_klienta
-inner join lab9.dom d
 on d.id_domu=t.id_domu
 --38. Wyświetlić wszystkie miasta, których dwie pierwsze litery są takie same.
 select distinct d1.miasto, d2.miasto
@@ -192,9 +181,6 @@ and k.id_klienta in
 (select k.id_klienta from lab9.klient k, lab9.transakcje t
 where k.id_klienta = t.id_klienta
 group by k.id_klienta having COUNT(*)>2)
-
-select * from lab9.transakcje
-insert into lab9.transakcje values (5,5,1,500000, GETDATE())
 --41. Wyświetlić wszystkie nazwy klientów oraz domy klientów, którzy kupili dokładnie dwa domy.
 select d.*, k.nazwisko
 from lab9.dom d, lab9.klient k, lab9.transakcje t
@@ -205,10 +191,10 @@ where k.id_klienta = t.id_klienta
 group by k.id_klienta having COUNT(*)=2)
 --42. Wyświetlić wszystkie transakcje, w których cena uzyskana była wyższa niż średnia.
 select * from lab9.transakcje
-where cena\_uzyskana > (select AVG(cena_uzyskana) from lab9.transakcje)
+where cena_uzyskana > (select AVG(cena_uzyskana) from lab9.transakcje)
 --43. Wyświetlić wszystkie domy, które były w sprzedaży zanim dodany został dom w Sopocie.
 select * from lab9.dom
-where id_domu < (select MIN(id_domu) from lab9.dom where miasto like 'Sopot')
+where id_domu < (select MIN(id_domu) from lab9.dom where miasto = 'Sopot')
 --44. Wyświetlić dni tygodnia wszystkich zawartych transakcji.
 select DATENAME(dw, data_transakcji) as 'dzien tygodnia' from lab9.transakcje
 --45. Wyświetlić identyfikatory i dni tygodnia dla transakcji w miastach w których sprzedano co najmniej 3 domy.
@@ -219,7 +205,7 @@ and d.miasto in
 (select d.miasto from lab9.transakcje t, lab9.dom d
 where d.id_domu = t.id_domu
 group by miasto having count(*)>3)
---46. Wyświetlić wszystkie nazwiska klientów i ewentualnie nazwy miast i ulic, gdzie pierwsza litera ulicy jest równa pierwszej literze miasta. -MOZE BYC 'EWENTUALNIE' NA KOLOKWIUM
+--46. Wyświetlić wszystkie nazwiska klientów i ewentualnie nazwy miast i ulic, gdzie pierwsza litera ulicy jest równa pierwszej literze miasta. 
 select k1.nazwisko, k2.miasto, k2.ulica 
 from lab9.klient k1 left join lab9.klient k2
 on k1.id_klienta=k2.id_klienta
@@ -241,7 +227,7 @@ and LEFT(nazwisko,1)=SUBSTRING(nazwisko,3,1)
 select top 3  nazwisko
 from lab9.klient k, lab9.transakcje t
 where k.id_klienta = t.id_klienta
-order by data_transakcji asc
+order by data_transakcji
 --51. Wyświetlić wszystkie identyfikatory domów oraz ewentualnie ich miasta w przypadku, gdy cena proponowana metra kwadratowego przekracza 5000 zł.
 select d1.id_domu, d2.miasto
 from lab9.dom d1 left join lab9.dom d2
@@ -282,5 +268,5 @@ update zadanie58 set id_klienta += 100
 --60. Dodać dwa nowe domy.
 select * from lab9.dom
 insert into lab9.dom values
-(7,'Gdansk','Pilotow 14',120,600000),
+(7,'Gdansk','Pilotow 18',120,600000),
 (8,'Puck','Szpitalna 7',100,250000)
