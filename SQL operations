@@ -1,0 +1,286 @@
+use s2202
+go
+create schema lab9
+go
+--1. Utworzyć trzy tabele:
+
+--DOM
+--Id_domu
+--Miasto
+--Ulica
+--Metraz
+--Cena_proponowana
+create table lab9.dom (
+id_domu numeric(5) primary key,
+miasto varchar(30),
+ulica varchar(30),
+metraz numeric(5,2),
+cena_proponowana numeric(9,2))
+go
+--KLIENT
+--Id_klienta
+--Imie
+--Nazwisko
+--Miasto
+--Ulica
+create table lab9.klient(
+id_klienta numeric(5) primary key,
+imie varchar(10),
+nazwisko varchar(30),
+miasto varchar(30),
+ulica varchar(30))
+go
+--TRANSAKCJE
+--ID_transakcji
+--ID_domu
+--ID_klienta
+--Cena_uzyskana
+--Data_transakcji
+--Id_klienta_FK
+--Id_domu_FK
+create table lab9.transakcje(
+id_transakcji numeric(5) primary key,
+id_domu numeric(5) foreign key (id_domu) references lab9.dom(id_domu),
+id_klienta numeric(5) foreign key (id_klienta) references lab9.klient(id_klienta),
+cena_uzyskana numeric(9,2),
+data_transakcji date default getdate())
+go
+--2. Wypełnić tabele danymi.
+insert into lab9.dom values
+(1,'Gdansk','Szopy 3',180,500000),
+(2,'Gdansk','Torunska 14',100,250000),
+(3,'Gdynia','Morska 8',88,910000),
+(4,'Krakow','Wawelska 5',44,550000),
+(5,'Warszawa','Marszalkowska',19.2,470000),
+(6, 'Wejherowo','Dworcowa 2', 32, NULL)
+insert into lab9.klient values
+(1, 'Jan', 'Kowalski','Sopot','Armii Krajowej 5'),
+(2, 'Adam', 'Nowak','Rumia','Kolorowa 3'),
+(3, 'Julia', 'Bolda','Gdansk','Dluga 8'),
+(4, 'Anna', 'Kortas','Warszawa','Grunwaldzka 15'),
+(5, 'Monika', 'Kwiatkowska','Krakow','Lakowa 29')
+insert into lab9.transakcje values
+(1, 1, 5, 450000, getdate()),
+(2, 2, 1, 250000, getdate()),
+(3, 3, 2, 300000, getdate())
+--3. Wyświetlić wszystkie domy.
+select * from lab9.dom
+--4. Wyświetlić imiona, nazwiska i miasto klientów w porządku alfabetycznym rosnącym według nazwy miasta.
+select k.imie as 'imie klienta', k.nazwisko as 'nazwisko klienta', k.miasto as 'miasto klienta' from lab9.klient k order by miasto asc
+--5. Wyświetlić ulice, miasta i metraz dla domów  w porządku malejącym według metrażu.
+select d.ulica as 'ulica domu', d.miasto as 'miasto domu', d.metraz as 'metraz domu' from lab9.dom d order by metraz desc
+--6. Wyświetlić wszystkie domy o metrażu mniejszym niż 200 metrów.
+select * from lab9.dom where metraz<200
+--7. Wyświetlić wszystkie transakcje jakie miały miejsce, wyświetlając wszystkie dane o klientach, domach i transakcjach bez wartości kluczy obcych i głównych.
+select k.imie, k.nazwisko, k.miasto, k.ulica, d.miasto, d.ulica, d.metraz, d.cena_proponowana, t.cena_uzyskana, t.data_transakcji
+from lab9.klient k, lab9.dom d, lab9.transakcje t
+where d.id_domu=t.id_domu and k.id_klienta=t.id_klienta
+--8.    Wyświetlić miasta, nazwiska oraz imiona klientów, sortując według miasta malejąco i według nazwiska rosnąco oraz imienia malejąco.
+select miasto, nazwisko, imie from lab9.klient order by miasto desc, nazwisko asc, imie desc
+--9. Wyświetlić wszystkich klientów, którzy mieszkają w Gdansku.
+select * from lab9.klient where miasto='Gdansk'
+--10. Wyświetlić cenę proponowaną wszystkich domów znajdujących się w Gdańsku.
+select cena_proponowana from lab9.dom where miasto='Gdansk'
+--11. Wyswietlić ceny proponowane domów, które znajdują się na ulicach Grunwaldzkiej i Toruńskiej w Gdańsku.
+select cena_proponowana from lab9.dom where (ulica like 'Grunwaldzka%' or ulica like 'Torunska%') and miasto = 'Gdansk'
+--12. Wyświetlić ceny proponowane wszystkich domów w miastach Gdańsk i Gdynia, w porządku malejącym według ceny proponowanej.
+select cena_proponowana from lab9.dom where miasto='Gdansk' or miasto='Gdynia' order by cena_proponowana desc
+--13. Wyświetlić wszystkie miasta w których znajdują się domy dostępne w sprzedaży, nie duplikując nazw miast.
+select distinct miasto from lab9.dom
+--14. Wyświetlić wszystkie transakcje domów, których cena uzyskana kształtuje się w zakresie pomiędzy 200000 a 500000 złotych.
+select * from lab9.transakcje where cena_uzyskana>200000 and cena_uzyskana<500000
+--lub cena_uzyskana between 200000 and 500000
+--15. Wyświetlić wszystkie transakcje dla których identyfikator domu jest mniejszy niż 15.
+select * from lab9.transakcje where id_domu < 15
+--16. Wyświetlić wszystkie transakcje dla których identyfikator domu jest równy 4, 13 lub 19.
+select * from lab9.transakcje where id_domu=4 or id_domu=13 or id_domu=19
+-- lub where id_domu in(4,13,19)
+--17. Wyświetlić wszystkie domy dla których nie podano ceny proponowanej.
+select * from lab9.dom where cena_proponowana is NULL 
+--18. Wyświetlić wszystkie domy dla identyfikatora powyżej 2, których nazwa ulicy zawiera literę w.
+select * from lab9.dom where id_domu>2 and ulica like'%w%'
+--19. Wyświetlić nazwiska wszystkich osób, które dokonały transakcji zakupu domu.
+select nazwisko from lab9.klient where id_klienta in (select id_klienta from lab9.transakcje)
+--20. Zakładając dodatkowy podatek na zakup nieruchomości w wysokości 15% wyświetlić listę proponowanych cen powiększoną o tę wartość.
+select CAST( round(cena_proponowana * 1.15,2) as numeric(9,2)) as 'cena z podatkiem' from lab9.dom --zaokraglenie do 2 miejsc po przecinku
+--21. Rozbudować poprzednie zapytanie wyświetlając trzy kolumny – cena bez podatku, cena z podatkiem, wartość podatku.
+select cena_proponowana as 'cena bez podatku',
+cast(round(cena_proponowana * 1.15,2) as numeric(9,2)) as 'cena z podatkiem',
+cast(round(cena_proponowana*0.15,2) as numeric(9,2))as 'wartosc podatku'
+from lab9.dom
+--22. Obliczyć średnią cenę proponowaną metra kwadratowego domu.
+select cast(round(AVG(cena_proponowana/metraz),2)as numeric(9,2)) as 'cena za metr kwadratowy' from lab9.dom
+--23. Wyświetlić tylko te transakcje, które miały miejsce w 2025 roku, podając nazwę miasta, imię i nazwisko klienta oraz cenę proponowaną i uzyskaną.
+select k.miasto, k.imie, k.nazwisko, d.cena_proponowana, t.cena_uzyskana
+from lab9.klient k, lab9.dom d, lab9.transakcje t
+where k.id_klienta=t.id_klienta and d.id_domu=t.id_domu and YEAR(t.data_transakcji)=2025
+--24. Zakładając, że domy poniżej 50 metrów będą traktowane jako dwupokojowe,
+--do 100 metrów trzypokojowe a powyżej czteropokojowe,
+--dodać kolumnę liczba pokoi, która obok pełnych informacji o domu poda jego wielkość w pokojach (odpowiednio dwupokojowy, trzypokojowy, czteropokojowy).
+select * ,
+case              
+when metraz<50 then 'dwupokojowe'
+when metraz<100 then 'trzypokojowe'
+else 'czteropokojowe'
+end as 'liczba pokoi'
+from lab9.dom
+--25. Wyświetlić wszystkie transakcje sprzedaży domów, które miały miejsce poza Trójmiastem.
+select  * from lab9.transakcje t, lab9.dom d
+where t.id_domu=d.id_domu and d.miasto not in('Gdansk','Gdynia','Sopot')
+--26. Wyświetlić w dwóch kolumnach – w pierwszej identyfikatory oraz w drugiej kolumnie imiona i nazwiska klientów.
+select id_klienta as 'identyfikator', imie + ' ' + nazwisko as 'imie i nazwisko' from lab9.klient
+--27. Wyświetlić identyfikatory wszystkich niesprzedanych domów.
+select id_domu from lab9.dom where id_domu not in (select id_domu from lab9.transakcje)
+--28. Wyświetlić transakcje klientów, których nazwiska rozpoczynają się na literę A, B, C, D, E, F lub G.
+select * from lab9.transakcje t, lab9.klient k
+where k.id_klienta=t.id_klienta
+and LEFT(k.nazwisko,1) between 'A' and 'G'
+--29. Wyświetlić w kolumnie o nazwie wartość różnicę w postaci wartości bezwzględnej, pomiędzy ceną proponowaną a uzyskaną, dodając kolumny zawierające nazwy miast domów, ich identyfikatory oraz ulice.
+select abs(d.cena_proponowana - t.cena_uzyskana) as wartosc, d.miasto, d.id_domu, d.ulica
+from lab9.dom d, lab9.transakcje t
+where d.id_domu=t.id_domu
+--30. Wyświetlić tylko te transakcje, których różnica pomiędzy ceną uzyskaną a proponowaną jest większa od 0.
+select d.cena_proponowana - t.cena_uzyskana as wartosc, d.miasto, d.id_domu, d.ulica
+from lab9.dom d, lab9.transakcje t
+where d.id_domu=t.id_domu
+and t.cena_uzyskana - d.cena_proponowana >0
+--31. Wyświetlić wartość w miesiącach, jaka upłynęła pomiędzy transakcją a dzisiejszym dniem.
+select month(t.data_transakcji) - month(getdate()) as 'miesiace'
+from lab9.transakcje t
+--lub select *, DATEDIFF(MONTH,data\_trasakcji,getdate()) as 'liczba miesiecy' from lab9.transakcje
+--32. Wyświetlić wartość liczbową prezentującą liczbę przeprowadzonych transakcji.
+select COUNT (*) as 'liczba transakcji' from lab9.transakcje
+--33. Wyświetlić cenę proponowaną w wartościach tekstowych.
+select cast(cena_proponowana as varchar(10)) as 'cena proponowana tekst' from lab9.dom
+--34. Wyświetlić łączną wartość cen uzyskanych za dom.
+select sum(cena_uzyskana) as 'laczna cena' from lab9.transakcje
+--35. Wyświetlić minimalną cenę uzyskaną za dom.
+select MIN(cena_uzyskana) from lab9.transakcje
+--36. Wyświetlić maksymalną cenę uzyskaną za dom.
+select MAX(cena_uzyskana) from lab9.transakcje
+--37. Wyświetlić wszystkie nazwiska i ewentualnie daty transakcji oraz metraże sprzedanych domów, w przypadku, gdy transakcja sprzedaży miała miejsce.
+select k.nazwisko, t.data_transakcji, d.metraz
+from lab9.klient k, lab9.transakcje t, lab9.dom d
+where k.id_klienta = t.id_klienta
+and d.id_domu=t.id_domu
+--dwie wersje ale join lepszy bo pokazuje tez nazwiska klientow ktorzy nie dokonali transakcji
+select k.nazwisko, t.data_transakcji, d.metraz
+from lab9.klient k left join lab9.transakcje t
+on k.id_klienta = t.id_klienta
+left join lab9.dom d
+on d.id_domu=t.id_domu
+--inner join daje taki sam wynik co where (tylko wspolne dane)
+select k.nazwisko, t.data_transakcji, d.metraz
+from lab9.klient k inner join lab9.transakcje t
+on k.id_klienta = t.id_klienta
+inner join lab9.dom d
+on d.id_domu=t.id_domu
+--38. Wyświetlić wszystkie miasta, których dwie pierwsze litery są takie same.
+select distinct d1.miasto, d2.miasto
+from lab9.dom d1, lab9.dom d2
+where LEFT(d1.miasto,2)=LEFT(d2.miasto,2)
+and d1.miasto<d2.miasto
+--39. Wyświetlić wszystkie domy, których metraż jest większy od największego metrażu w Sopocie.
+select * from lab9.dom
+where metraz >
+(select MAX(metraz) as 'metraz w Sopocie' from lab9.dom where miasto='Sopot')
+--40. Wyświetlić wszystkie domy wraz z nazwiskami klientów, którzy kupili co najmniej dwa domy.
+select d.*, k.nazwisko
+from lab9.dom d, lab9.klient k, lab9.transakcje t
+where k.id_klienta = t.id_klienta and d.id_domu=t.id_domu
+and k.id_klienta in
+(select k.id_klienta from lab9.klient k, lab9.transakcje t
+where k.id_klienta = t.id_klienta
+group by k.id_klienta having COUNT(*)>2)
+
+select * from lab9.transakcje
+insert into lab9.transakcje values (5,5,1,500000, GETDATE())
+--41. Wyświetlić wszystkie nazwy klientów oraz domy klientów, którzy kupili dokładnie dwa domy.
+select d.*, k.nazwisko
+from lab9.dom d, lab9.klient k, lab9.transakcje t
+where k.id_klienta = t.id_klienta and d.id_domu=t.id_domu
+and k.id_klienta in
+(select k.id_klienta from lab9.klient k, lab9.transakcje t
+where k.id_klienta = t.id_klienta
+group by k.id_klienta having COUNT(*)=2)
+--42. Wyświetlić wszystkie transakcje, w których cena uzyskana była wyższa niż średnia.
+select * from lab9.transakcje
+where cena\_uzyskana > (select AVG(cena_uzyskana) from lab9.transakcje)
+--43. Wyświetlić wszystkie domy, które były w sprzedaży zanim dodany został dom w Sopocie.
+select * from lab9.dom
+where id_domu < (select MIN(id_domu) from lab9.dom where miasto like 'Sopot')
+--44. Wyświetlić dni tygodnia wszystkich zawartych transakcji.
+select DATENAME(dw, data_transakcji) as 'dzien tygodnia' from lab9.transakcje
+--45. Wyświetlić identyfikatory i dni tygodnia dla transakcji w miastach w których sprzedano co najmniej 3 domy.
+select DATENAME(dw, data_transakcji) as 'dzien tygodnia', id_transakcji
+from lab9.transakcje t, lab9.dom d
+where t.id_domu=d.id_domu
+and d.miasto in
+(select d.miasto from lab9.transakcje t, lab9.dom d
+where d.id_domu = t.id_domu
+group by miasto having count(*)>3)
+--46. Wyświetlić wszystkie nazwiska klientów i ewentualnie nazwy miast i ulic, gdzie pierwsza litera ulicy jest równa pierwszej literze miasta. -MOZE BYC 'EWENTUALNIE' NA KOLOKWIUM
+select k1.nazwisko, k2.miasto, k2.ulica 
+from lab9.klient k1 left join lab9.klient k2
+on k1.id_klienta=k2.id_klienta
+where LEFT(k2.ulica,1)=LEFT(k2.miasto,1) --1 litera ulicy=1 litera miasta
+--47. Wyświetlić w jednej kolumnie miesiące, a w drugiej liczby transakcji przeprowadzonych w tym czasie.
+select DATENAME(month, data_transakcji) as 'miesiac transakcji' ,
+COUNT(*) as 'liczba transakcji', id_transakcji
+from lab9.transakcje
+group by id_transakcji, DATENAME(month, data_transakcji)
+--48. Zakładając, że prowizja w 2025 roku wynosi 1,55%, wyświetlić wszystkie ceny uzyskane za domy bez tej prowizji, których sprzedaż miała miejsce w 2025 roku.
+select *, cena_uzyskana*0.9845 as 'cena bez prowizji'
+from lab9.transakcje
+where YEAR(data_transakcji)=2025
+--49. Wyświetlić wszystkie 5 literowe nazwiska, których 1 litera jest równa 3 literze.
+select * from lab9.klient
+where len(nazwisko)=5
+and LEFT(nazwisko,1)=SUBSTRING(nazwisko,3,1)
+--50. Wyświetlić nazwiska trzech klientów, którzy przeprowadzili jakiekolwiek transakcje zakupu domu jako pierwsi.
+select top 3  nazwisko
+from lab9.klient k, lab9.transakcje t
+where k.id_klienta = t.id_klienta
+order by data_transakcji asc
+--51. Wyświetlić wszystkie identyfikatory domów oraz ewentualnie ich miasta w przypadku, gdy cena proponowana metra kwadratowego przekracza 5000 zł.
+select d1.id_domu, d2.miasto
+from lab9.dom d1 left join lab9.dom d2
+on d1.id_domu=d2.id_domu
+and d2.cena_proponowana/d2.metraz>5000
+--52. Wyświetlić nazwiska kończące się na „ski” dla wszystkich klientów, którzy kupili co najmniej 1 dom.
+select k.nazwisko
+from lab9.klient k, lab9.transakcje t
+where k.id_klienta = t.id_klienta
+and k.nazwisko like '%ski'
+--53. Zwiększyć cenę proponowaną domów o 5%.
+update  lab9.dom set cena_proponowana = cena_proponowana*1.05
+--cena_proponowana*=1.05
+--54. Obniżyć cenę proponowaną domu o najwyższej cenie o 5000 zł.
+update  lab9.dom set cena_proponowana -= 5000
+where cena_proponowana = (select MAX(cena_proponowana) from lab9.dom)
+--55. Obniżyć o 10% ceny wszystkich niesprzedanych domów.
+update lab9.dom set cena_proponowana *= 0.9
+where id_domu not in (select id_domu from lab9.transakcje)
+--56. Usunąć wszystkich klientów, których nazwiska zaczynają się na literę „A”.
+delete from lab9.klient
+where nazwisko like 'A%'
+--57. Usunąć z oferty wszystkie domy, które nie zostały sprzedane.
+delete from lab9.dom
+where id_domu not in (select id_domu from lab9.transakcje)
+--58. Utworzyć widok dla wszystkich klientów, którzy nie nabyli jeszcze domu.
+go
+create view zadanie58 as
+select * from lab9.klient
+where id_klienta not in (select id_klienta from lab9.transakcje)
+go
+select * from zadanie58
+--59. Zwiększyć identyfikatory klientów, którzy nie nabyli domu o 100.
+update lab9.klient set id_klienta += 100
+where id_klienta not in (select id_klienta from lab9.transakcje)
+--or
+update zadanie58 set id_klienta += 100
+--60. Dodać dwa nowe domy.
+select * from lab9.dom
+insert into lab9.dom values
+(7,'Gdansk','Pilotow 14',120,600000),
+(8,'Puck','Szpitalna 7',100,250000)
